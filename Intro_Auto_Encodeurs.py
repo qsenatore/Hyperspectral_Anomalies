@@ -7,6 +7,7 @@ Created on Tue Feb 11 14:05:26 2025
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import cv2
 
@@ -56,5 +57,12 @@ model.summary()
 model.fit(img_array, img_array, epochs = 50, shuffle = True)
 
 pred = model.predict(img_array)
+
+print("Image originale :")
+
+imshow(img)
+plt.show()
+
+print("Image reconstruite :")
 
 imshow(pred[0].reshape(LIGNES, COLONNES, 3))

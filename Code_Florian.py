@@ -79,7 +79,7 @@ def train_DL_model(model, n_epochs, loader, loss_function):
             # Storing the losses in a list for plotting
             losses.append(loss)
 
-        return model, losses
+    return model, losses
 
 
 def binning_spectral(X, nb_band_final):
@@ -113,7 +113,8 @@ def RX_global(im_bin):
 if __name__ == "__main__":
     # pathproj='/run/media/sdoz/One Touch/INSA/scene_lac.hdr'
     
-    os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/Hyperspectral_Anomalies/DATA0_INSA/image1'
+   # os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/Hyperspectral_Anomalies/DATA0_INSA/image1'
+    os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
     pathproj = "scene_lac.hdr"
     # LECTURE IMAGE
     img = spec.open_image(pathproj)
@@ -168,8 +169,9 @@ if __name__ == "__main__":
                                  weight_decay=1e-8)
 
     model, losses = train_DL_model(model, n_epochs, loader, loss_function)
-    diff_AE = im_bin - model(X_train_tensor).detach().numpy()
     
+    #erreure de reconstruction
+    diff_AE = X_train_scaled - model(X_train_tensor).detach().numpy()
     diff_AE = diff_AE.reshape(Nblig, Nbcol, n_bin)
     
     diff_AE = np.mean((diff_AE**2),axis=2)

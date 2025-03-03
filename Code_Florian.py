@@ -116,10 +116,11 @@ def RX_global(im_bin):
 
 
 if __name__ == "__main__":
-    # pathproj='/run/media/sdoz/One Touch/INSA/scene_lac.hdr'
+   # pathproj='/run/media/sdoz/One Touch/INSA/scene_lac.hdr'
     
    # os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/Hyperspectral_Anomalies/DATA0_INSA/image1'
-    os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
+   # os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
+    os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
     pathproj = "scene_lac.hdr"
     
     # LECTURE IMAGE
@@ -138,7 +139,7 @@ if __name__ == "__main__":
     #ils mettent le cube en matrice (chaquse lignes representent un pixel avec dans chacunes des col une de ses bandes)
     data_im = np.reshape(proj, [Nbpix, Nbband])
     
-    #image binaire : 
+    #image avec bandes regroupées : 
     im_bin = binning_spectral(data_im, n_bin)
 
 

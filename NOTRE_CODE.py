@@ -13,6 +13,9 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import os
+from sklearn.metrics import confusion_matrix
+import metrique
+
 
 class AE(torch.nn.Module):
     def __init__(self, n_pixels):
@@ -81,10 +84,10 @@ def binning_spectral(X, nb_band_final):
     im_bin[:, -1] = np.sum(X[:, (i + 1) * band_width:], axis=1)
     return im_bin
 
-# os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/Hyperspectral_Anomalies/DATA0_INSA/image1'
+os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
 # os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
-os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
-pathproj = "scene_lac.hdr"
+#os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
+pathproj = "scene_lac_berge.hdr"
 
 img = spec.open_image(pathproj)
 proj = img.load()
@@ -102,7 +105,7 @@ data_im = np.reshape(proj, [Nbpix, Nbband])
 im_bin = binning_spectral(data_im, n_bin)
 
 batch_size = 32
-#n_epochs = 15
+n_epochs = 2
 lr = 1e-3
 
 model = AE(n_bin)
@@ -111,7 +114,7 @@ optimizer = torch.optim.Adam(model.parameters(),
                              lr=lr,
                              weight_decay=1e-8)
 
-for n_epochs in range(1,16):
+for n_epochs in range(1,n_epochs):
     print(f"Training epoch {n_epochs}/15...") 
 
     shuffle = True
@@ -128,5 +131,35 @@ for n_epochs in range(1,16):
     diff_AE = np.mean((diff_AE**2),axis=2)
     
     fig, ax = plt.subplots()
-    ax.imshow(diff_AE)
+    #ax.imshow(diff_AE)
     plt.show()
+    
+    
+    
+#métrique TABLE DE CONFUSION
+
+print(np.max(diff_AE))
+
+
+seuil=0.05
+resultat_AE = np.where(diff_AE > seuil, 1, 0)  # 1 = anomalie, 0 = normal
+fig, ax = plt.subplots()
+#affiche les anomalies detectées (seuil a faire varier)
+ax.imshow(resultat_AE, cmap='gray') #diff_AE mais binaire avec seuil
+plt.title("Carte des Anomalies")
+plt.show()
+
+pathproj2 = "scene_lac_berge_VT.hdr"
+img2=spec.open_image(pathproj2)
+gt = img2.load()
+gt = gt.squeeze()
+#affiche la matrice de confusion
+metrique.Confusion(gt, resultat_AE)
+
+
+
+
+
+
+
+    

@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import precision_recall_curve, auc
 
 def Confusion(ground_truth, resultat_AE):
     # Aplatir les matrices pour la comparaison
@@ -77,5 +78,26 @@ def plot_roc_curve(ground_truth, resultat_AE, seuil):
     print("AUC (Area Under Curve) : ", roc_auc)
 
 
-    
+def Precision_Recall(ground_truth, diff_AE):
+     # Aplatir les matrices pour la comparaison
+     gt_flat = ground_truth.flatten()
+     diff_AE_flat = diff_AE.flatten()
+     
+     # Vérifier que les tailles correspondent
+     if gt_flat.shape != diff_AE_flat.shape:
+         print("Erreur : les dimensions ne correspondent pas !")
+         return
+     precision, recall, _ = precision_recall_curve(gt_flat, diff_AE_flat)
+     
+     # Calcul de l'AUC (aire sous la courbe Precision-Recall)
+     auc_pr = auc(recall, precision)
+     plt.figure(figsize=(8, 6))
+     plt.plot(recall, precision, marker='.', label=f'AUC = {auc_pr:.2f}')
+     plt.xlabel('Recall')
+     plt.ylabel('Precision')
+     plt.title('Precision-Recall Curve')
+     plt.legend()
+     plt.grid()
+     plt.show()
+     print("auc = ", auc_pr)
     

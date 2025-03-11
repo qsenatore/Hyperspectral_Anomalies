@@ -84,8 +84,8 @@ def binning_spectral(X, nb_band_final):
     im_bin[:, -1] = np.sum(X[:, (i + 1) * band_width:], axis=1)
     return im_bin
 
-os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
-# os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
+#os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
+os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image2'
 #os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
 pathproj = "scene_lac_berge.hdr"
 
@@ -157,6 +157,8 @@ gt = gt.squeeze()
 #affiche la matrice de confusion
 metrique.Confusion(gt, resultat_AE)
 metrique.plot_roc_curve(gt, diff_AE, seuil)
+
+metrique.Precision_Recall(gt,diff_AE)
 
 
 

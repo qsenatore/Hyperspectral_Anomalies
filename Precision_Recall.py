@@ -15,6 +15,8 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import os
+from sklearn.metrics import precision_recall_curve, auc
+
 
 
 class AE(torch.nn.Module):
@@ -208,7 +210,8 @@ if __name__ == "__main__":
     # plot some figure as exemple
     print("size img", data_im.shape)
     print("size img binned", im_bin.shape)
-    print("distance_carte", distance_carte.shape)
+    print("distance_carte", distance_carte.shape)  
+  
 
     fig, ax = plt.subplots()
     ax.imshow(data_img_matrix[:, :, [85, 50, 14]])

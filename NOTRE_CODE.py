@@ -14,6 +14,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import os
 from sklearn.metrics import confusion_matrix
+from skimage.metrics import structural_similarity as ssim
 import metrique
 
 
@@ -84,9 +85,9 @@ def binning_spectral(X, nb_band_final):
     im_bin[:, -1] = np.sum(X[:, (i + 1) * band_width:], axis=1)
     return im_bin
 
-os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
-# os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
-#os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
+#os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
+#os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image1'
+os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
 pathproj = "scene_lac_berge.hdr"
 
 img = spec.open_image(pathproj)
@@ -105,17 +106,20 @@ data_im = np.reshape(proj, [Nbpix, Nbband])
 im_bin = binning_spectral(data_im, n_bin)
 
 batch_size = 32
-n_epochs = 6
+n_epochs = 11
 lr = 1e-3
 
 model = AE(n_bin)
+
 loss_function = torch.nn.MSELoss()
+#loss_function = torch.nn.L1Loss()
+
 optimizer = torch.optim.Adam(model.parameters(),
                              lr=lr,
                              weight_decay=1e-8)
 
-for n_epochs in range(5,n_epochs):
-    print(f"Training epoch {n_epochs}...") 
+for n_epochs in range(10,n_epochs):
+    print(f"Nombre d'epochs : {n_epochs}") 
 
     shuffle = True
     Scaler = MinMaxScaler()
@@ -141,23 +145,48 @@ for n_epochs in range(5,n_epochs):
 print(np.max(diff_AE))
 
 
-seuil=0.009 #seuil a faire varier pour determiner la sensibiliter de la detection d'anomalie
-resultat_AE = np.where(diff_AE > seuil, 1, 0)  # 1 = anomalie, 0 = normal
-fig, ax = plt.subplots()
-#affiche les anomalies detectées (seuil a faire varier)
-ax.imshow(resultat_AE, cmap='gray') #diff_AE mais binaire avec seuil
-plt.title("Carte des Anomalies")
-plt.show()
+vecteur_seuil = np.linspace(0,np.max(diff_AE),100) #seuil a faire varier pour determiner la sensibiliter de la detection d'anomalie
+taux_detection = []
 
 pathproj2 = "scene_lac_berge_VT.hdr"
 img2=spec.open_image(pathproj2)
 gt = img2.load()
 gt = gt.squeeze()
 
-#affiche la matrice de confusion
-metrique.Confusion(gt, resultat_AE)
-metrique.plot_roc_curve(gt, diff_AE, seuil)
+for seuil in vecteur_seuil:
+    resultat_AE = np.where(diff_AE > seuil, 1, 0)  # 1 = anomalie, 0 = normal
+    
+#fig, ax = plt.subplots()
+#affiche les anomalies detectées (seuil a faire varier)
+#ax.imshow(resultat_AE, cmap='gray') #diff_AE mais binaire avec seuil
+#plt.title("Carte des Anomalies")
+#plt.show()
 
+#affiche la matrice de confusion
+#metrique.Confusion(gt, resultat_AE)
+#metrique.plot_roc_curve(gt, diff_AE, seuil)
+
+    ground_truth_flat = gt.flatten()
+    resultat_AE_flat = resultat_AE.flatten()
+    matrix = confusion_matrix(ground_truth_flat, resultat_AE_flat)
+    
+    taux_detection.append(np.trace(matrix)/np.sum(matrix))
+    
+taux_detection=np.array(taux_detection)
+
+seuil = 0.99
+
+plt.plot(vecteur_seuil,taux_detection, label="Courbe")
+
+for i in range(1, len(vecteur_seuil)):
+    if taux_detection[i] > seuil and taux_detection[i-1] <= seuil:
+        plt.axvline(x=vecteur_seuil[i], color='red', linestyle='--', label='Taux > 0.99')
+        plt.text(vecteur_seuil[i], taux_detection[i], f'{vecteur_seuil[i]}', color='green', verticalalignment='top', horizontalalignment='left')
+        
+plt.title("Précision en fonction du seuil")
+plt.xlabel("Seuil")
+plt.ylabel("Taux de bonnes détections")
+plt.legend()
 
 
 

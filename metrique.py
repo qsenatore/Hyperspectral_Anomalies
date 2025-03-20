@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import precision_recall_curve, f1_score
 
 def Confusion(ground_truth, resultat_AE):
     # Aplatir les matrices pour la comparaison
@@ -87,7 +88,7 @@ def Precision_Recall(ground_truth, diff_AE):
      if gt_flat.shape != diff_AE_flat.shape:
          print("Erreur : les dimensions ne correspondent pas !")
          return
-     precision, recall, _ = precision_recall_curve(gt_flat, diff_AE_flat)
+     precision, recall, thresholds = precision_recall_curve(gt_flat, diff_AE_flat)
      
      # Calcul de l'AUC (aire sous la courbe Precision-Recall)
      auc_pr = auc(recall, precision)
@@ -100,4 +101,13 @@ def Precision_Recall(ground_truth, diff_AE):
      plt.grid()
      plt.show()
      print("auc = ", auc_pr)
+     
+     #on priviligie un bon recall (détecter toutes les anomalies)
+
+     cible_recall = 0.90  # Exemple : On veut capturer 90% des vraies anomalies
+     idx = np.argmax(recall >= cible_recall)  # Cherche le plus petit seuil qui atteint ce rappel
+     seuil_cible = thresholds[idx]
+
+     print(f"Seuil optimal pour un Rappel de {cible_recall*100:.0f}% : {seuil_cible:.4f}")
+
     

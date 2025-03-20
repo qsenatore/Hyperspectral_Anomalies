@@ -104,8 +104,8 @@ data_im = np.reshape(proj, [Nbpix, Nbband])
 
 im_bin = binning_spectral(data_im, n_bin)
 
-batch_size = 32
-n_epochs = 6
+batch_size = 15
+n_epochs = 32
 lr = 1e-3
 
 model = AE(n_bin)
@@ -114,7 +114,7 @@ optimizer = torch.optim.Adam(model.parameters(),
                              lr=lr,
                              weight_decay=1e-8)
 
-for n_epochs in range(5,n_epochs):
+for n_epochs in range(31,n_epochs):
     print(f"Training epoch {n_epochs}...") 
 
     shuffle = True
@@ -141,9 +141,20 @@ for n_epochs in range(5,n_epochs):
 print(np.max(diff_AE))
 
 
-seuil=0.009 #seuil a faire varier pour determiner la sensibiliter de la detection d'anomalie
-resultat_AE = np.where(diff_AE > seuil, 1, 0)  # 1 = anomalie, 0 = normal
+#seuil=0.009 #seuil a faire varier pour determiner la sensibiliter de la detection d'anomalie
+#resultat_AE = np.where(diff_AE > seuil, 1, 0)  # 1 = anomalie, 0 = normal
+
+#seuil = np.percentile(diff_AE, 95)  # Prend le seuil à 95% des erreurs
+seuil=np.log1p(0.0698)
+
+#normaliser si valeurs trop proches
+diff_AE = (diff_AE - np.min(diff_AE)) / (np.max(diff_AE) - np.min(diff_AE))
+diff_AE_log = np.log1p(diff_AE)
+resultat_AE = np.where(diff_AE_log > seuil, 1, 0)
+#print(f"Seuil basé sur le percentile 95% : {seuil:.4f}")
+
 fig, ax = plt.subplots()
+
 #affiche les anomalies detectées (seuil a faire varier)
 ax.imshow(resultat_AE, cmap='gray') #diff_AE mais binaire avec seuil
 plt.title("Carte des Anomalies")
@@ -157,6 +168,11 @@ gt = gt.squeeze()
 #affiche la matrice de confusion
 metrique.Confusion(gt, resultat_AE)
 metrique.plot_roc_curve(gt, diff_AE, seuil)
+
+#voir si les valeurs sont trop proche (et donc les seuils pris pour le PR ne sont pas pertinents)
+plt.hist(diff_AE.ravel(), bins=50)
+
+
 
 metrique.Precision_Recall(gt,diff_AE)
 

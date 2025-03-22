@@ -11,6 +11,8 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import precision_recall_curve, auc
 from sklearn.metrics import precision_recall_curve, f1_score
 
+
+color=['red','grey','blue','green','yellow','purple','darkorange']
 def Confusion(ground_truth, resultat_AE):
     # Aplatir les matrices pour la comparaison
     ground_truth_flat = ground_truth.flatten()
@@ -36,7 +38,7 @@ def Confusion(ground_truth, resultat_AE):
     
 
 
-def plot_roc_curve(ground_truth, resultat_AE, seuil):
+def plot_roc_curve(ground_truth, diff_AE):
     """
     Génère une courbe ROC en utilisant les erreurs de reconstruction
     pour identifier les anomalies par rapport à la vérité de terrain.
@@ -48,7 +50,7 @@ def plot_roc_curve(ground_truth, resultat_AE, seuil):
     
     # Aplatir les matrices pour les comparer
     ground_truth_flat = ground_truth.flatten()
-    resultat_AE_flat = resultat_AE.flatten()
+    diff_AE_flat = diff_AE.flatten()
 
     # Créer des étiquettes binaires à partir de ground_truth (1 pour anomalie, 0 pour normal)
     # Ici, on suppose que ground_truth est déjà une matrice binaire (1 pour anomalie, 0 pour normal)
@@ -56,7 +58,7 @@ def plot_roc_curve(ground_truth, resultat_AE, seuil):
 
     # Calculer les scores (erreurs de reconstruction) pour chaque pixel
     # Par exemple, la reconstruction error peut être comparée à un seuil
-    y_scores = resultat_AE_flat  # ou tu peux utiliser l'erreur de reconstruction directement
+    y_scores = diff_AE_flat  # ou tu peux utiliser l'erreur de reconstruction directement
 
     # Calculer la courbe ROC
     fpr, tpr, seuil = roc_curve(y_true, y_scores)
@@ -67,7 +69,8 @@ def plot_roc_curve(ground_truth, resultat_AE, seuil):
     # Tracer la courbe ROC
     plt.figure(figsize=(8, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (AUC = {:.2f})'.format(roc_auc))
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+  
+    plt.xscale('log')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
@@ -110,4 +113,35 @@ def Precision_Recall(ground_truth, diff_AE):
 
      print(f"Seuil optimal pour un Rappel de {cible_recall*100:.0f}% : {seuil_cible:.4f}")
 
+
+
+
+def plot_multiple_roc_curves(ground_truth, list_diff_AE, labels):
+    """
+    Génère plusieurs courbes ROC sur un même graphe.
     
+    :param ground_truth: Les valeurs réelles des anomalies (binaire 0 ou 1)
+    :param list_diff_AE: Liste de matrices des erreurs de reconstruction
+    :param labels: Liste de noms pour chaque courbe ROC
+    """
+
+    plt.figure(figsize=(8, 6))
+
+    for i, diff_AE in enumerate(list_diff_AE):
+        # Aplatir les matrices pour les comparer
+        ground_truth_flat = ground_truth.flatten()
+        diff_AE_flat = diff_AE.flatten()
+
+        # Calculer la courbe ROC
+        fpr, tpr, _ = roc_curve(ground_truth_flat, diff_AE_flat)
+        roc_auc = auc(fpr, tpr)
+
+        # Tracer la courbe ROC
+        plt.plot(fpr, tpr, lw=2, label=f'{labels[i]} (AUC = {roc_auc:.2f})')
+
+    plt.xscale('log')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curves')
+    plt.legend(loc='lower right')
+    plt.show()

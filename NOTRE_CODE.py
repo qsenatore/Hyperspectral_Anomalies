@@ -99,8 +99,8 @@ def RX_global(im_bin):
     return distance
 
 
-os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
-#os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image2'
+#os.environ['SPECTRAL_DATA'] = 'C:/Users/Admin/Documents/insa/4A/PIR/data/image2'
+os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image2'
 #os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/INSA/Projet_RI/data'
 pathproj = "scene_lac_berge.hdr"
 
@@ -140,39 +140,84 @@ lr = 1e-3
 
 model = AE(n_bin)
 loss_function = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(),
-                             lr=lr,
-                             weight_decay=1e-8)
+optimizer = torch.optim.Adam(model.parameters(), lr=lr,weight_decay=1e-8)
+
 list_diff_AE=[] #liste qui va stocker tous les résultats diff_AE que l'on va ensuite comparer
 list_diff_AE.append(distance) #on ajoute le résultat par RXglobal
 
-for n_epochs in range(1,5):
-    print(f"Training epoch {n_epochs}...") 
+# for n_epochs in range(1,10):
+#     print(f"Training  {n_epochs} epoch(s)...") 
 
-    shuffle = True
-    Scaler = MinMaxScaler()
-    X_train_scaled = Scaler.fit_transform(im_bin)
-    X_train_tensor = torch.from_numpy(X_train_scaled).float()
-    dataset = TensorDataset(X_train_tensor, X_train_tensor)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+#     shuffle = True
+#     Scaler = MinMaxScaler()
+#     X_train_scaled = Scaler.fit_transform(im_bin)
+#     X_train_tensor = torch.from_numpy(X_train_scaled).float()
+#     dataset = TensorDataset(X_train_tensor, X_train_tensor)
+#     loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
-    model, losses = train_DL_model(model, n_epochs, loader, loss_function)
+#     model, losses = train_DL_model(model, n_epochs, loader, loss_function)
     
-    diff_AE = X_train_scaled - model(X_train_tensor).detach().numpy()
-    diff_AE = diff_AE.reshape(Nblig, Nbcol, n_bin)  
-    diff_AE = np.mean((diff_AE**2),axis=2) #metrique à modifier avec un truc prenant en compte l'angle spectral
+#     diff_AE = X_train_scaled - model(X_train_tensor).detach().numpy()
+#     diff_AE = diff_AE.reshape(Nblig, Nbcol, n_bin)  
+#     diff_AE = np.mean((diff_AE**2),axis=2) #metrique à modifier avec un truc prenant en compte l'angle spectral
    
 
-    list_diff_AE.append(diff_AE) #stockage  des résultats de chaque itération dans une liste
+#     list_diff_AE.append(diff_AE) #stockage  des résultats de chaque itération dans une liste
     
-    #normaliser si valeurs trop proches
-    diff_AE = (diff_AE - np.min(diff_AE)) / (np.max(diff_AE) - np.min(diff_AE))
-    diff_AE_log = np.log1p(diff_AE)
-    seuil = np.percentile(diff_AE_log, 99.9)
-    resultat_AE = np.where(diff_AE_log > seuil, 1, 0)
-    #metrique.plot_roc_curve(gt, diff_AE, seuil)
+#     #normaliser si valeurs trop proches
+#     diff_AE = (diff_AE - np.min(diff_AE)) / (np.max(diff_AE) - np.min(diff_AE))
+#     diff_AE_log = np.log1p(diff_AE)
+#     seuil = np.percentile(diff_AE_log, 99.9)
+#     resultat_AE = np.where(diff_AE_log > seuil, 1, 0)
+#     #metrique.plot_roc_curve(gt, diff_AE, seuil)
     
-metrique.plot_multiple_roc_curves(gt, list_diff_AE, ['Rx',1,2,3,4])
+# metrique.plot_multiple_roc_curves(gt, list_diff_AE, ['Rx','1epoch','2epochs','3epochs','4epochs','5epochs','6epochs','7epochs','8epochs','9epochs',])
+
+
+
+
+def test_batch():
+    
+    model = AE(n_bin)
+    loss_function = torch.nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr,weight_decay=1e-8)
+    list_diff_AE=[] #liste qui va stocker tous les résultats diff_AE que l'on va ensuite comparer
+    list_diff_AE.append(distance) #on ajoute le résultat par RXglobal
+    #paramètres pour la boucle de variation des batchs sizes
+    list_batch_size=[1,2,3,4]
+    n_epochs=1
+    
+    for batch_size in list_batch_size :
+        print(f"Training  {n_epochs} epoch(s) with {batch_size} batch size...") 
+    
+        shuffle = True
+        Scaler = MinMaxScaler()
+        X_train_scaled = Scaler.fit_transform(im_bin)
+        X_train_tensor = torch.from_numpy(X_train_scaled).float()
+        dataset = TensorDataset(X_train_tensor, X_train_tensor)
+        loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    
+        model, losses = train_DL_model(model, n_epochs, loader, loss_function)
+        
+        diff_AE = X_train_scaled - model(X_train_tensor).detach().numpy()
+        diff_AE = diff_AE.reshape(Nblig, Nbcol, n_bin)  
+        diff_AE = np.mean((diff_AE**2),axis=2) #metrique à modifier avec un truc prenant en compte l'angle spectral
+       
+    
+        list_diff_AE.append(diff_AE) #stockage  des résultats de chaque itération dans une liste
+        
+        #normaliser si valeurs trop proches
+        diff_AE = (diff_AE - np.min(diff_AE)) / (np.max(diff_AE) - np.min(diff_AE))
+        diff_AE_log = np.log1p(diff_AE)
+        seuil = np.percentile(diff_AE_log, 99.9)
+        resultat_AE = np.where(diff_AE_log > seuil, 1, 0)
+        #metrique.plot_roc_curve(gt, diff_AE, seuil)
+        
+    metrique.plot_multiple_roc_curves(gt, list_diff_AE, ['Rx','1batchs','2batchs','3batchs','4batchs'])
+
+test_batch()
+
+
 #print(np.max(diff_AE))
 
 

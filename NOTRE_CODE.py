@@ -140,7 +140,7 @@ lr = 1e-3
 
 model = AE(n_bin)
 loss_function = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=lr,weight_decay=1e-8)
+optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-8)
 
 list_diff_AE=[] #liste qui va stocker tous les résultats diff_AE que l'on va ensuite comparer
 list_diff_AE.append(distance) #on ajoute le résultat par RXglobal

@@ -183,7 +183,7 @@ im_bin = binning_spectral(data_im, n_bin)
 distance = RX_global(im_bin)
 
 batch_size = 32
-n_epochs = 1
+n_epochs = 5
 lr = 1e-3
 
 # Fonction pour automatiser le test des différents AE
@@ -197,7 +197,7 @@ def test_autoencoder(model_class, X_train_tensor, n_bin):
     dataset = TensorDataset(X_train_tensor, X_train_tensor)
     loader = DataLoader(dataset, batch_size=32, shuffle=True)
     
-    model, losses = train_DL_model(model, 1, loader, loss_function, optimizer)
+    model, losses = train_DL_model(model, n_epochs, loader, loss_function, optimizer)
     diff_AE = X_train_tensor.numpy() - model(X_train_tensor).detach().numpy()
     diff_AE = diff_AE.reshape(Nblig, Nbcol, n_bin)
     
@@ -226,7 +226,7 @@ def test_couches():
     for model_class in models:
         diff_AE = test_autoencoder(model_class, X_train_tensor, n_bin)
         list_diff_AE.append(diff_AE)
-    
+
     # On plot les courbes ROC
     
     metrique.plot_multiple_roc_curves(gt, list_diff_AE, ['Rx', 'modèle 1', 'modèle 2', 'modèle 3'])

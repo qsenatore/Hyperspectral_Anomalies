@@ -58,10 +58,11 @@ class VAE(nn.Module):
 
 def vae_loss(recon_x, x, mu, logvar):
     
-    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
+    mse_loss = torch.nn.MSELoss()
+    MSE = mse_loss(recon_x, x)    
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     
-    return BCE + KLD
+    return MSE + 5*KLD
 
 # Fonction d'entraînement du modèle
 
@@ -208,7 +209,9 @@ plt.title("Carte d'anomalies via l'espace latent du VAE")
 plt.axis("off")
 plt.show()
 
-plt.imshow(gt, cmap='gray')
-plt.title("Vérité terrain")
+diff_RX = distanceRX.reshape(Nblig, Nbcol)
+
+plt.imshow(gt, cmap='inferno')
+plt.title("Algo RX")
 plt.axis("off")
 plt.show()

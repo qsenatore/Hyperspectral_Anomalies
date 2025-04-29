@@ -128,8 +128,8 @@ def RX_global(im_bin):
 #os.environ['SPECTRAL_DATA'] = 'C:/Users/emaga/GIT/PIR/DATA0_INSA/image2'
 os.environ['SPECTRAL_DATA'] = '/home/senatorequentin/Projet_RI/data'
 
-pathproj = "scene_lac_berge.hdr"
-pathproj2 = "scene_lac_berge_VT.hdr"
+pathproj = "AVIRIS-II.mat.hdr"
+pathproj2 = "AVIRIS-II.mat_VT.hdr"
 
 img = spec.open_image(pathproj)
 proj = img.load()
@@ -154,15 +154,15 @@ distanceRX = RX_global(im_bin)
 
 # Paramètres du VAE
 
-batch_size = 1000
+batch_size = 32
 lr = 1e-3
-n_epochs = 1
+n_epochs = 5
 
 # Initialisation
 
 model = VAE(input_dim=n_bin, hidden_dim=16, latent_dim=2)
 loss_function = vae_loss
-optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-8)
+optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
 
 # Entraînement
 
@@ -194,7 +194,10 @@ inv_cov = np.linalg.inv(cov)
 latent_distances = np.array([mahalanobis(z, center, inv_cov) for z in latent])
 diff_VAE = latent_distances.reshape(Nblig, Nbcol) 
 
+diff_RX = distanceRX.reshape(Nblig, Nbcol)
+
 metrique.plot_roc_curve(gt, diff_VAE)
+metrique.plot_roc_curve(gt, diff_RX)
 
 plt.scatter(latent[:, 0], latent[:, 1], s=2, alpha=0.5)
 plt.xlabel("Latent dimension 1")
@@ -209,9 +212,13 @@ plt.title("Carte d'anomalies via l'espace latent du VAE")
 plt.axis("off")
 plt.show()
 
-diff_RX = distanceRX.reshape(Nblig, Nbcol)
-
-plt.imshow(gt, cmap='inferno')
+plt.imshow(diff_RX, cmap='inferno')
 plt.title("Algo RX")
+plt.colorbar(label="Distance de Mahalanobis (RX)")
+plt.axis("off")
+plt.show()
+
+plt.imshow(gt, cmap='gray')
+plt.title("Vérité terrain")
 plt.axis("off")
 plt.show()
